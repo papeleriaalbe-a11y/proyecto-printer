@@ -5,7 +5,7 @@ import os
 from flask import Flask, render_template_string, request, send_file
 import webbrowser
 from threading import Timer
-
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -1871,11 +1871,21 @@ from flask import request
 
 # Esto verifica tu archivo de usuarios
 def verificar_acceso(email):
+    print(f"DEBUG: Verificando acceso para: {email}") # Esto saldrá en los LOGS de Render
     try:
         with open('usuarios.json', 'r') as f:
             data = json.load(f)
-            return data.get(email, {}).get('activo', False)
-    except:
+            usuario_info = data.get(email)
+            print(f"DEBUG: Datos encontrados para {email}: {usuario_info}")
+            
+            if usuario_info and usuario_info.get('activo') == True:
+                print("DEBUG: Acceso CONCEDIDO")
+                return True
+            
+            print("DEBUG: Acceso DENEGADO")
+            return False
+    except Exception as e:
+        print(f"DEBUG: ERROR al leer JSON: {e}")
         return False
 
 # Tu nuevo "guardia" de seguridad
@@ -1907,16 +1917,25 @@ def procesar_quitar_fondo():
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
+import json
+import os
+
+def cargar_usuarios():
+    if not os.path.exists('usuarios.json'):
+        return {} # Retorna vacío en vez de crashear
+    with open('usuarios.json', 'r') as f:
+        return json.load(f)
+
 
 @app.route('/')
+@requerir_acceso  # <--- ESTO ES LO QUE FALTA
 def index():
-    return render_template_string(HTML_INTERFACE)
+    return render_template_string(HTML_INTERFACE) # O tu render_template
 
 
 
 
 
 if __name__ == '__main__':
-    # Render asigna el puerto en la variable de entorno 'PORT'
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    # Esto es solo para cuando pruebas en tu PC (localhost)
+    app.run(debug=True, port=10000)
