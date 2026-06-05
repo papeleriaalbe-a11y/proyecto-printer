@@ -1917,6 +1917,6 @@ def index():
 
 
 if __name__ == '__main__':
-    # Esto abrirá el navegador 1.5 segundos después de iniciar
-    Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
-    app.run(port=5000)
+    # Render asigna el puerto en la variable de entorno 'PORT'
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
