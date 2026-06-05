@@ -1865,6 +1865,33 @@ function crearCuadroTexto() {
 </html>
 """
 
+import json
+from functools import wraps
+from flask import request
+
+# Esto verifica tu archivo de usuarios
+def verificar_acceso(email):
+    try:
+        with open('usuarios.json', 'r') as f:
+            data = json.load(f)
+            return data.get(email, {}).get('activo', False)
+    except:
+        return False
+
+# Tu nuevo "guardia" de seguridad
+def requerir_acceso(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        email = request.args.get('email')
+        if not verificar_acceso(email):
+            return "Acceso denegado. Contacta al administrador.", 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+
+
+
 session = new_session(model_name="isnet-general-use")
 
 @app.route('/quitar-fondo', methods=['POST'])
