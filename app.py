@@ -1892,14 +1892,14 @@ def requerir_acceso(f):
 
 
 
-session = new_session(model_name="isnet-general-use")
+session = new_session(model_name="u2netp")
 
 @app.route('/quitar-fondo', methods=['POST'])
 def procesar_quitar_fondo():
     file = request.files['image']
     input_image = Image.open(file.stream)
     
-    # Usamos la sesión con el modelo mejorado
+    # Usamos la sesión ligera
     output_image = remove(input_image, session=session)
     
     img_io = io.BytesIO()
