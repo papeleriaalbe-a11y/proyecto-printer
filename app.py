@@ -1865,30 +1865,26 @@ function crearCuadroTexto() {
 </html>
 """
 
-import json
+# --- IMPORTS ---
 from functools import wraps
-from flask import request
+from flask import Flask, render_template_string, request, send_file
+import json
+import io
+from PIL import Image
+from rembg import remove, new_session
 
-# Esto verifica tu archivo de usuarios
+app = Flask(__name__)
+
+# --- SEGURIDAD (Tu código está perfecto aquí) ---
 def verificar_acceso(email):
-    print(f"DEBUG: Verificando acceso para: {email}") # Esto saldrá en los LOGS de Render
     try:
         with open('usuarios.json', 'r') as f:
             data = json.load(f)
             usuario_info = data.get(email)
-            print(f"DEBUG: Datos encontrados para {email}: {usuario_info}")
-            
-            if usuario_info and usuario_info.get('activo') == True:
-                print("DEBUG: Acceso CONCEDIDO")
-                return True
-            
-            print("DEBUG: Acceso DENEGADO")
-            return False
-    except Exception as e:
-        print(f"DEBUG: ERROR al leer JSON: {e}")
+            return usuario_info and usuario_info.get('activo') == True
+    except:
         return False
 
-# Tu nuevo "guardia" de seguridad
 def requerir_acceso(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -1898,44 +1894,25 @@ def requerir_acceso(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
-
-
-
-session = new_session(model_name="u2netp")
+# --- RUTAS ---
+@app.route('/')
+@requerir_acceso  # <--- PROTEGIDA
+def index():
+    return render_template_string(HTML_INTERFACE)
 
 @app.route('/quitar-fondo', methods=['POST'])
+@requerir_acceso  # <--- PROTEGIDA TAMBIÉN
 def procesar_quitar_fondo():
     file = request.files['image']
     input_image = Image.open(file.stream)
-    
-    # Usamos la sesión ligera
     output_image = remove(input_image, session=session)
-    
     img_io = io.BytesIO()
     output_image.save(img_io, 'PNG')
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
-import json
-import os
-
-def cargar_usuarios():
-    if not os.path.exists('usuarios.json'):
-        return {} # Retorna vacío en vez de crashear
-    with open('usuarios.json', 'r') as f:
-        return json.load(f)
-
-
-@app.route('/')
-@requerir_acceso  # <--- ESTO ES LO QUE FALTA
-def index():
-    return render_template_string(HTML_INTERFACE) # O tu render_template
-
-
-
-
+# --- INICIALIZACIÓN ---
+session = new_session(model_name="u2netp")
 
 if __name__ == '__main__':
-    # Esto es solo para cuando pruebas en tu PC (localhost)
     app.run(debug=True, port=10000)
