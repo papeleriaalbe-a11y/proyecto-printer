@@ -1917,6 +1917,5 @@ session = new_session(model_name="u2netp")
 import os
 
 if __name__ == '__main__':
-    # Render usa la variable de entorno PORT, si no existe usa el 10000
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+    # Solo ejecutará esto en tu PC local, NO en Render
+    app.run(debug=True)
